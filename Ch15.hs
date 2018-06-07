@@ -189,8 +189,8 @@ ununfold = undefined
 -- arrows.
 data{-kind-} F = F :+: F
                | F :*: F
-               | Unit
-               | X -- Variable
+               | forall b. T b -- ^ Base type.
+               | X             -- ^ Type variable
 
 -- | Expressions of type @[a/X]tau@, where @tau@ is a polynomial
 -- functor.
@@ -198,7 +198,7 @@ data E (tau :: F) a where
   L :: E f1 a -> E (f1 :+: f2) a           -- ^ Left sum intro.
   R :: E f2 a -> E (f1 :+: f2) a           -- ^ Right sum intro.
   P :: E f1 a -> E f2 a -> E (f1 :*: f2) a -- ^ Pair intro.
-  U :: E Unit a                            -- ^ Unit intro.
+  B :: Show b => b -> E (T b) a            -- ^ Base type intro.
   V :: a -> E X a                          -- ^ Term of variable type intro.
 deriving instance Functor (E tau)
 deriving instance Show a => Show (E tau a)
@@ -233,13 +233,13 @@ v (V x) = x
 -- but using 'F'-functors.
 
 -- | Polynomial functor for nats.
-type Nat'F = Unit :+: X
+type Nat'F = T () :+: X
 -- | Nats.
 type Nat' = Ind (E Nat'F)
 
 -- | Zero.
 z' :: Nat'
-z' = Fold (L U)
+z' = Fold (L (B ()))
 
 -- | Successor.
 s' :: Nat' -> Nat'
@@ -250,7 +250,7 @@ prettyNat' :: Nat' -> String
 prettyNat' = rec @(E Nat'F) x_e1
   where
     x_e1 :: E Nat'F String -> String
-    x_e1 (L U) = "z'"
+    x_e1 (L (B ())) = "z'"
     x_e1 (R (V a)) = "s' "++a
 
 threeNat' :: Nat'
@@ -260,7 +260,7 @@ addNat' :: Nat' -> Nat' -> Nat'
 addNat' m n = rec @(E Nat'F) x_e1 m
   where
     x_e1 :: E Nat'F Nat' -> Nat'
-    x_e1 (L U) = n
+    x_e1 (L (B ())) = n
     x_e1 (R (V a)) = Fold (R (V a))
 
 sixNat' :: Nat'
