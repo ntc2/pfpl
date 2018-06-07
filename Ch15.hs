@@ -1,3 +1,7 @@
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE TypeApplications #-}
@@ -179,9 +183,103 @@ ununfold :: forall t_tau. Functor t_tau => t_tau (Coi t_tau) -> Coi t_tau
 ununfold = undefined
 
 ----------------------------------------------------------------
+-- * Deep embedding of positive functors
+
+-- | Data kind of strictly positive polynomial functors without
+-- arrows.
+data{-kind-} F = F :+: F
+               | F :*: F
+               | Unit
+               | X -- Variable
+
+-- | Expressions of type @[a/X]tau@, where @tau@ is a polynomial
+-- functor.
+data E (tau :: F) a where
+  L :: E f1 a -> E (f1 :+: f2) a           -- ^ Left sum intro.
+  R :: E f2 a -> E (f1 :+: f2) a           -- ^ Right sum intro.
+  P :: E f1 a -> E f2 a -> E (f1 :*: f2) a -- ^ Pair intro.
+  U :: E Unit a                            -- ^ Unit intro.
+  V :: a -> E X a                          -- ^ Term of variable type intro.
+deriving instance Functor (E tau)
+deriving instance Show a => Show (E tau a)
+
+----------------------------------------------------------------
+-- * Eliminators for 'E'
+--
+-- Not used.
+
+-- | Left product elimination.
+l :: E (f1 :*: f2) a -> E f1 a
+l (P x _) = x
+
+-- | Right product elimination.
+r :: E (f1 :*: f2) a -> E f2 a
+r (P _ y) = y
+
+-- | Sum elimination.
+caseOf :: (E f1 a -> b) -> (E f2 a -> b) -> E (f1 :+: f2) a -> b
+caseOf x_e1 y_e2 e = case e of
+  L x -> x_e1 x
+  R y -> y_e2 y
+
+-- | Term of variable type elimination.
+v :: E X a -> a
+v (V x) = x
+
+----------------------------------------------------------------
+-- * Inductive nats via 'F'-functors
+--
+-- This repeats the examples from the first definition of nats above,
+-- but using 'F'-functors.
+
+-- | Polynomial functor for nats.
+type Nat'F = Unit :+: X
+-- | Nats.
+type Nat' = Ind (E Nat'F)
+
+-- | Zero.
+z' :: Nat'
+z' = Fold (L U)
+
+-- | Successor.
+s' :: Nat' -> Nat'
+s' n = Fold (R (V n))
+
+-- | Pretty print a nat.
+prettyNat' :: Nat' -> String
+prettyNat' = rec @(E Nat'F) x_e1
+  where
+    x_e1 :: E Nat'F String -> String
+    x_e1 (L U) = "z'"
+    x_e1 (R (V a)) = "s' "++a
+
+threeNat' :: Nat'
+threeNat' = s' (s' (s' z'))
+
+addNat' :: Nat' -> Nat' -> Nat'
+addNat' m n = rec @(E Nat'F) x_e1 m
+  where
+    x_e1 :: E Nat'F Nat' -> Nat'
+    x_e1 (L U) = n
+    x_e1 (R (V a)) = Fold (R (V a))
+
+sixNat' :: Nat'
+sixNat' = addNat' threeNat' threeNat'
+
+mainNat' :: IO ()
+mainNat' = do
+  printf "threeNat' = %s\n" (prettyNat' threeNat')
+  printf "sixNat' = %s\n" (prettyNat' sixNat')
+  printf "unFold threeNat' = %s\n" (show $ fmap prettyNat' $ unFold threeNat')
+  printf "Fold (unFold threeNat') = %s\n" (prettyNat' $ Fold (unFold threeNat'))
+
+----------------------------------------------------------------
 -- * Print examples
 
 main :: IO ()
 main = do
   mainNat
+  printf "\n"
   mainIsom
+  printf "\n"
+  mainNat'
