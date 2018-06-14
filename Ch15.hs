@@ -12,13 +12,20 @@
 -- | PFPL Ch 15: Inductive and Coinductive Types.
 --
 -- Run 'main' to print examples.
-import Text.Printf
-
+--
+-- Note on exercises: the "rules" are that you can apply 'Fold',
+-- 'Gen', 'rec', 'unfold', and 'fmap', and pattern match on functors
+-- (like 'T_NatF'). You can't use pattern matching on 'Fold', or
+-- 'Gen', or Haskell recursion. These rules keep our programs in
+-- language described by Harper, altho embedded in Haskell.
+--
 -- Note on notation: I can't use dots ('.') in Haskell names, so I'm
 -- using underscores instead. E.g. you should read @t_tau@ as
 -- @t.tau@. Also, in Haskell we do substitution by application, so
 -- e.g. @[tau'/t]tau@ is written as application @(t.tau) tau'@, which
 -- in turn is @t_tau tau'@ in the Haskell below.
+
+import Text.Printf
 
 ----------------------------------------------------------------
 -- * Inductive types
