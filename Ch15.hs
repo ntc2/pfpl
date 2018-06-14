@@ -147,11 +147,17 @@ type Conat = Coi T_NatF
 
 -- | Compare with bottom of page 131.
 omega :: Conat
-omega = Gen (\x -> NatS x) (NatZ)
+omega = Gen NatS () -- The state '()' here is totally irrelevant;
+                    -- even undefined works.
 
 -- | Exercise 15.1: embed @Nat@ into @Conat@.
 --
--- Not sure how to do this one ...
+-- This is an embedding in the sense that if you keep unfolding the
+-- 'Conat' you get until it turns into a 'NatZ' constructor, you get
+--
+-- > s (s ... (s z) ... ) |-> NatS (NatS ... (NatS NatZ) ...)
+natToConat :: Nat -> Conat
+natToConat n = Gen unFold n
 
 ----------------------------------------------------------------
 -- * Isomorphisms
