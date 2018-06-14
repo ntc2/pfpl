@@ -166,6 +166,19 @@ omega = Gen NatS () -- The state '()' here is totally irrelevant;
 natToConat :: Nat -> Conat
 natToConat n = Gen unFold n
 
+mainConat :: IO ()
+mainConat = do
+  flip mapM_ [z, s z, s (s z), s (s (s z))] $ \n -> do
+    printf "expand (natToConat %s) = %s\n"
+      (prettyNat n)
+      (prettyNat . expand . natToConat $ n)
+  printf "take 100 (prettyNat (expand omega)) = %s\n"
+    (take 100 . prettyNat . expand $ omega)
+  where
+    -- Expand a Conat until it terminates. Not as useful on 'omega' :D
+    expand :: Conat -> Nat
+    expand c = Fold $ expand <$> unfold c
+
 ----------------------------------------------------------------
 -- * Isomorphisms
 --
@@ -291,8 +304,30 @@ mainNat' = do
 
 main :: IO ()
 main = do
-  mainNat
-  printf "\n"
-  mainIsom
-  printf "\n"
-  mainNat'
+  mapM_ (uncurry present) actions
+  where
+    actions :: [(String, IO ())]
+    actions =
+      [ ("Nat", mainNat)
+      , ("Isom", mainIsom)
+      , ("Nat'", mainNat')
+      , ("Conat", mainConat) ]
+
+    -- Present a main.
+    present :: String -> IO () -> IO ()
+    present name action = do
+      printf "%s\n" (title name)
+      action
+      printf "\n"
+
+    -- Print a name centered in a line of hashes.
+    title :: String -> String
+    title name = do
+      let len = length name
+      let leftLen = len `div` 2
+      let rightLen = (len + 1) `div` 2
+      let halfWidth = 40
+      printf "%s %s %s"
+        (replicate (halfWidth - leftLen + 1) '#')
+        name
+        (replicate (halfWidth - rightLen + 1) '#')
