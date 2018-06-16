@@ -236,14 +236,7 @@ mainConat = do
 --
 -- The other direction is just 'Fold'.
 unFold :: forall t_tau. Functor t_tau => Ind t_tau -> t_tau (Ind t_tau)
-unFold = snd . go
-  where
-    go :: Ind t_tau -> (Ind t_tau, t_tau (Ind t_tau))
-    go = rec @t_tau go'
-    -- My @fmap fst@, @fmap snd@ fix was essentially right, but I also
-    -- needed to add 'Fold's in the right places.
-    go' :: t_tau (Ind t_tau, t_tau (Ind t_tau)) -> (Ind t_tau, t_tau (Ind t_tau))
-    go' x = (Fold $ fmap fst x, fmap (Fold . snd) x)
+unFold = rec (fmap Fold)
 
 mainIsom :: IO ()
 mainIsom = do
