@@ -199,20 +199,33 @@ omega = Gen NatS () -- The state '()' here is totally irrelevant;
 --
 -- > s (s ... (s z) ... ) |-> NatS (NatS ... (NatS NatZ) ...)
 natToConat :: Nat -> Conat
-natToConat n = Gen unFold n
+natToConat = indToCoi
+
+-- | Embed an inductive term into the corresponding coinductive term.
+--
+-- The inverse is '_coiToInd', but that function is not definable in
+-- Harper's Ch 15 language, because it doesn't terminate in general.
+indToCoi :: Functor t_tau => Ind t_tau -> Coi t_tau
+indToCoi = Gen unFold
+
+-- | Turn a coinductive term into the corresponding inductive term, if
+-- any.
+--
+-- This is __not__ a valid program in Harper's language, and loops
+-- forever on "properly" coinductive terms like 'omega'. However, it's
+-- very useful for testing our definitions, since it allows us to
+-- visualize coinductive terms.
+_coiToInd :: Functor t_tau => Coi t_tau -> Ind t_tau
+_coiToInd c = Fold $ _coiToInd <$> unfold c
 
 mainConat :: IO ()
 mainConat = do
   flip mapM_ [z, s z, s (s z), s (s (s z))] $ \n -> do
     printf "expand (natToConat %s) = %s\n"
       (prettyNat n)
-      (prettyNat . expand . natToConat $ n)
+      (prettyNat . _coiToInd . natToConat $ n)
   printf "take 100 (prettyNat (expand omega)) = %s\n"
-    (take 100 . prettyNat . expand $ omega)
-  where
-    -- Expand a Conat until it terminates. Not as useful on 'omega' :D
-    expand :: Conat -> Nat
-    expand c = Fold $ expand <$> unfold c
+    (take 100 . prettyNat . _coiToInd $ omega)
 
 ----------------------------------------------------------------
 -- * Isomorphisms
