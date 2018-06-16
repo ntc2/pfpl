@@ -243,11 +243,20 @@ mainIsom = do
   printf "unFold threeNat = %s\n" (show $ fmap prettyNat $ unFold threeNat)
   printf "Fold (unFold threeNat) = %s\n" (prettyNat $ Fold (unFold threeNat))
 
--- | Exercise: hard half of isomorphism between @Coi t_tau@ and @t_tau (Coi t_tau)@.
+-- | Hard half of isomorphism between @Coi t_tau@ and @t_tau (Coi
+-- t_tau)@.
 --
 -- The other direction is just 'unfold'.
+--
+-- Arguing that 'ununfold' is correct is more complicated than for
+-- 'unFold', because specifying the correctness of 'ununfold' depends
+-- on having an extensional notion of equality for coinductive
+-- types. Note that @c@ and @ununfold (unfold c)@ are __not__
+-- /intentionally equal/; the /extensional correctness claim/ is that
+-- all of their finite unfolding produce the same constructors in the
+-- same places (cf. https://stackoverflow.com/a/30912671/470844)!
 ununfold :: forall t_tau. Functor t_tau => t_tau (Coi t_tau) -> Coi t_tau
-ununfold = undefined
+ununfold = Gen (fmap unfold)
 
 ----------------------------------------------------------------
 -- * Deep embedding of positive functors
