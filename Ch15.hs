@@ -206,7 +206,7 @@ natToConat = indToCoi
 -- The inverse is '_coiToInd', but that function is not definable in
 -- Harper's Ch 15 language, because it doesn't terminate in general.
 indToCoi :: Functor t_tau => Ind t_tau -> Coi t_tau
-indToCoi = Gen unFold
+indToCoi = Gen inv_Fold
 
 -- | Turn a coinductive term into the corresponding inductive term, if
 -- any.
@@ -221,10 +221,10 @@ _coiToInd c = Fold $ _coiToInd <$> unfold c
 mainConat :: IO ()
 mainConat = do
   flip mapM_ [z, s z, s (s z), s (s (s z))] $ \n -> do
-    printf "expand (natToConat %s) = %s\n"
+    printf "_coiToInd (natToConat %s) = %s\n"
       (prettyNat n)
       (prettyNat . _coiToInd . natToConat $ n)
-  printf "take 100 (prettyNat (expand omega)) = %s\n"
+  printf "take 100 (prettyNat (_coiToInd omega)) = %s\n"
     (take 100 . prettyNat . _coiToInd $ omega)
 
 ----------------------------------------------------------------
@@ -234,29 +234,31 @@ mainConat = do
 
 -- | Hard half of isomorphism between @Ind t_tau@ and @t_tau (Ind t_tau)@.
 --
--- The other direction is just 'Fold'.
-unFold :: forall t_tau. Functor t_tau => Ind t_tau -> t_tau (Ind t_tau)
-unFold = rec (fmap Fold)
-
-mainIsom :: IO ()
-mainIsom = do
-  printf "unFold threeNat = %s\n" (show $ fmap prettyNat $ unFold threeNat)
-  printf "Fold (unFold threeNat) = %s\n" (prettyNat $ Fold (unFold threeNat))
+-- The other direction is just 'Fold', this is the inverse.
+inv_Fold :: forall t_tau. Functor t_tau => Ind t_tau -> t_tau (Ind t_tau)
+inv_Fold = rec (fmap Fold)
 
 -- | Hard half of isomorphism between @Coi t_tau@ and @t_tau (Coi
 -- t_tau)@.
 --
--- The other direction is just 'unfold'.
+-- The other direction is just 'unfold', this is the inverse.
 --
--- Arguing that 'ununfold' is correct is more complicated than for
--- 'unFold', because specifying the correctness of 'ununfold' depends
+-- Arguing that 'inv_unfold' is correct is more complicated than for
+-- 'inv_Fold', because specifying the correctness of 'inv_unfold' depends
 -- on having an extensional notion of equality for coinductive
--- types. Note that @c@ and @ununfold (unfold c)@ are __not__
+-- types. Note that @c@ and @inv_unfold (unfold c)@ are __not__
 -- /intentionally equal/; the /extensional correctness claim/ is that
 -- all of their finite unfolding produce the same constructors in the
 -- same places (cf. https://stackoverflow.com/a/30912671/470844)!
-ununfold :: forall t_tau. Functor t_tau => t_tau (Coi t_tau) -> Coi t_tau
-ununfold = Gen (fmap unfold)
+inv_unfold :: forall t_tau. Functor t_tau => t_tau (Coi t_tau) -> Coi t_tau
+inv_unfold = Gen (fmap unfold)
+
+mainIsom :: IO ()
+mainIsom = do
+  printf "inv_Fold threeNat = %s\n" (show $ fmap prettyNat $ inv_Fold threeNat)
+  printf "Fold (inv_Fold threeNat) = %s\n" (prettyNat $ Fold (inv_Fold threeNat))
+  printf "inv_unfold (unfold (natToConat threeNat)) = %s\n"
+    (prettyNat . _coiToInd . inv_unfold . unfold . natToConat $ threeNat)
 
 ----------------------------------------------------------------
 -- * Deep embedding of positive functors
@@ -370,8 +372,8 @@ mainNat' :: IO ()
 mainNat' = do
   printf "threeNat' = %s\n" (prettyNat' threeNat')
   printf "sixNat' = %s\n" (prettyNat' sixNat')
-  printf "unFold threeNat' = %s\n" (show $ fmap prettyNat' $ unFold threeNat')
-  printf "Fold (unFold threeNat') = %s\n" (prettyNat' $ Fold (unFold threeNat'))
+  printf "inv_Fold threeNat' = %s\n" (show $ fmap prettyNat' $ inv_Fold threeNat')
+  printf "Fold (inv_Fold threeNat') = %s\n" (prettyNat' $ Fold (inv_Fold threeNat'))
 
 ----------------------------------------------------------------
 -- * Print examples
