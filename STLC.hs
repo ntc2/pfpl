@@ -49,14 +49,15 @@ emptyCtx = []
 
 eval :: E -> Either Error E
 eval e = case e of
-  Var i -> die $ printf "Unbound variable '%i'!" i
+  Var i -> return $ Var i
   App e1 e2 -> do
     v1 <- eval e1
     v2 <- eval e2
-    case e1 of
-      Lam _ b -> return $ sub 0 v2 b
-      _ -> die $ "Unreachable!"
+    case v1 of
+      Lam _ b -> eval $ sub 0 v2 b
+      _ -> return $ App v1 v2
   Lam t b -> do
+    -- We evaluate the bodies of lambdas, which is not typical.
     v <- eval b
     return $ Lam t v
 
@@ -71,7 +72,7 @@ sub i e b = case b of
   -- Going under a binder so distance to binding site of substituted
   -- variable increases by one, and so substituted variable and free
   -- variables in substituted expression must be incremented.
-  Lam t b' -> Lam t (sub (i+1) e (weaken 0 b'))
+  Lam t b' -> Lam t (sub (i+1) (weaken 0 e) b')
 
 weaken :: Int -> E -> E
 weaken i e = case e of
@@ -86,6 +87,10 @@ main = do
   print $ infer emptyCtx (Lam a (Var 1))
   print $ infer emptyCtx (Lam a (Lam b (Var 0)))
   print $ infer emptyCtx (Lam a (Lam b (Var 1)))
+
+  -- (\x.\y.x y) (\x.x) |->* (\x.x)
+  print $ eval (Lam (a `Arr` a) (Lam a (Var 1 `App` Var 0)) `App`
+                Lam a (Var 0))
   where
     a,b,c :: T
     (a,b,c) = (Base 'A', Base 'B', Base 'C')
