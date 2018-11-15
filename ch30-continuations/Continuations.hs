@@ -7,11 +7,15 @@ module Continuations where
 import Control.Monad
 import Text.Printf
 import Debug.Trace
+import Data.Void
 
 t :: String -> a -> a
 t msg = trace (printf "XXX: %s" msg)
 
 data C r a = C { unC :: (a -> r) -> r }
+
+abort :: r -> C r a
+abort x = C (const x)
 
 -- | Show a 'C' computation by running it and showing the result.
 instance (Show a) => Show (C a a) where
@@ -83,42 +87,98 @@ main = do
             , ("callcc", test_callcc) ]
 
 ----------------------------------------------------------------
+-- Working implementation of co-routines that doesn't use callcc.
+--
+-- The implementation is Eric and Iavor's idea. Compared to my broken
+-- implementation above, this one uses @Result@ as the @r@ param of
+-- the continuation monad, not as result type.
 
--- type Coroutine r i o = C r (Result r i o)
-data Result r i o = Done o | Yield o (i -> C r (Result r i o))
+data Result i o = Done o | Yield o (i -> Result i o) | DoIO (IO (Result i o))
+
+type M i o a = C (Result i o) a
+
+done :: o -> M i o a
+done o = C (const (Done o))
+
+yield :: o -> M i o i
+yield o = C (Yield o)
+
+io :: IO a -> M i o a
+io act = C $ \k -> DoIO $ do
+  a <- act
+  pure (k a)
+
+runM :: M i o Void -> Result i o
+runM (C f) = f absurd
+
+-- | Interpreter for 'Result' computations.
+--
+-- Given a list of inputs it computes a list of outputs.
+interp :: [i] -> Result i o -> IO [o]
+interp ins r = case r of
+  Done o -> pure [o]
+  Yield o k -> case ins of
+    (i:ins') -> (o :) <$> interp ins' (k i)
+    _ -> pure [o]
+  DoIO act -> do
+    r <- act
+    interp ins r
+
+rsum :: M Int Int a
+rsum = loop 0
+  where
+    loop total = do
+      io (printf "%i" total)
+      i <- yield total
+      loop (i + total)
+
+test3 :: IO [Int]
+test3 = interp [2,4] (runM rsum)
+
+test2 :: [Int]
+test2 = [o1,o2,o3]
+  where
+    Yield o1 r1 = runM rsum
+    Yield o2 r2 = r1 2
+    Yield o3 _  = r2 4
+
+----------------------------------------------------------------
+-- Buggy implementation of co-routines
+
+data Result' r i o = Done' o | Yield' o (i -> C r (Result' r i o))
 
 coroutine ::
   (forall b.
     (o -> C r b) ->
     (o -> C r i) ->
     C r b) ->
-  C r (Result r i o)
+  C r (Result' r i o)
 coroutine body = do
-  let done k o = k (Done o)
-  let yield k o = callcc' $ \cc -> k (Yield o cc)
+  let done k o = k (Done' o)
+  let yield k o = callcc' $ \cc -> k (Yield' o cc)
   callcc' $ \cc -> body (done cc) (yield cc)
 
-runningSum :: C r (Result r Int Int)
+runningSum :: C r (Result' r Int Int)
 runningSum = coroutine $ \done yield ->
   let loop total = do
-        inc <- t (printf "yield %s" (show total)) $ yield total
+        inc <- yield total
         loop (inc + total)
   in loop 0
 
 test_runningSum :: C [Int] [Int]
 test_runningSum = do
-  Yield o1 r1 <- t "runningSum" $ runningSum
-  Yield o2 r2 <- t "r1" $ r1 2
-  Yield o3 r3 <- t "r2" $ r2 4
-  Yield o4 r4 <- t "r3" $ r3 8
+  Yield' o1 r1 <- t "runningSum" $ runningSum
+  Yield' o2 r2 <- t "r1" $ r1 2
+  Yield' o3 r3 <- t "r2" $ r2 4
+  Yield' o4 r4 <- t "r3" $ r3 8
   pure [o1,o2,o3,o4]
 
 test_runningSum' :: C [Int] [Int]
 test_runningSum' = loop 5 runningSum
   where
-    loop :: Int -> C r (Result r Int Int) -> C r [Int]
+    loop :: Int -> C r (Result' r Int Int) -> C r [Int]
     loop 0 r = return []
     loop n r = do
-      Yield o r' <- r
+      Yield' o r' <- r
       os <- loop (n-1) (r' n)
       pure (o : os)
