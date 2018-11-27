@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -88,6 +89,8 @@ main = do
             , ("callcc", T test_callcc)
             , ("test1", T test1)
             , ("test_coroutine2", T test_coroutine2)
+            , ("test_runningSum", T test_runningSum)
+            , ("test_runningSum'", T test_runningSum')
             ]
 
 data Test where
@@ -152,7 +155,13 @@ test2 = [o1,o2,o3]
 ----------------------------------------------------------------
 -- Implementation of co-routines using callcc
 
-callcc'' :: forall a r. String -> ((forall b. a -> C r b) -> C r a) -> C r a
+-- | Type of polymorphic current continuations, as provided by
+-- 'callcc''. These continuations consume @a@ values and produce any
+-- type, since they never return to the call site.
+type Cc r a = forall b. a -> C r b
+
+-- | A version of 'callcc'' with trace messages when the cc is run.
+callcc'' :: forall a r. String -> (Cc r a -> C r a) -> C r a
 callcc'' msg f = C $ \(k :: a -> r) ->
   let k' :: a -> C r b
       -- A computation that ignores it's continuation @_@ and uses the
@@ -160,30 +169,44 @@ callcc'' msg f = C $ \(k :: a -> r) ->
       k' a = t msg $ C (\_ -> k a)
   in unC (f k') k
 
-newtype ContRec r i o =
-  ContRec { unContRec :: forall b. (i, Result' r i o -> C r b) }
+-- | Data for resuming a coroutine: an input and continuation to
+-- receive the next output of the coroutine.
+data Resume r i o = Resume i (Cc r (Result' r i o))
 
+resume :: Cc r (Resume r i o) -> i -> C r (Result' r i o)
+resume r i = callcc' $ \cc' -> r (Resume i cc')
+
+-- | An output from a coroutine.
 data Result' r i o = Done' o
-                   | Yield' o (forall b. ContRec r i o -> C r b)
+                   | Yield' o (Cc r (Resume r i o))
 
-runningSum :: (i ~ Int, o ~ Int) =>
-  (forall b. Result' r i o -> C r b) -> C r (Result' r i o)
-runningSum cc0 = do
-  ContRec (i1, cc1) <- callcc'' "callcc 1" $ \c1 -> cc0 (Yield' 0 c1)
-  ContRec (i2, cc2) <- callcc'' "callcc 2" $ \c2 -> cc1 (Yield' 1 c2)
+yield' :: Cc r (Result' r i o) -> o -> C r (Resume r i o)
+yield' cc o = callcc' $ \cc' -> cc (Yield' o cc')
+
+done' :: Cc r (Result' r i o) -> o -> C r (Resume r i o)
+done' cc o = cc (Done' o)
+
+----------------------------------------------------------------
+-- Test using the 'Resume' and 'Result'' constructors directly.
+
+sumTwice :: (i ~ Int, o ~ Int) =>
+  (Cc r (Result' r i o)) -> C r (Result' r i o)
+sumTwice cc0 = do
+  Resume i1 cc1 <- callcc'' "callcc 1" $ \c1 -> cc0 (Yield' 0 c1)
+  Resume i2 cc2 <- callcc'' "callcc 2" $ \c2 -> cc1 (Yield' 1 c2)
   cc2 (Done' (i1 + i2))
 
 test1 :: C (String,Int) (String,Int)
 test1 = do
-  x <- callcc'' "running" $ \c -> runningSum c
+  x <- callcc'' "running" $ \c -> sumTwice c
   case x of
     Done' i -> pure ("0", i)
     Yield' i r -> t "first yield" $ do
-      y <- callcc'' "yield1" $ \mc1 -> r (ContRec (8, mc1))
+      y <- callcc'' "yield1" $ \mc1 -> r (Resume 8 mc1)
       case y of
         Done' i -> pure ("1", i)
         Yield' i r -> t "second yield" $ do
-          z <- callcc'' "yield2" $ \mc2 -> r (ContRec (900, mc2))
+          z <- callcc'' "yield2" $ \mc2 -> r (Resume 900 mc2)
           case z of
             Done' i -> pure ("2", i)
             _ -> error "foo"
@@ -191,29 +214,32 @@ test1 = do
 test_coroutine2 :: C (String, Int) (String, Int)
 test_coroutine2 = return ("1", 1)
 
-{-
-runningSum :: C r (Result' r Int Int)
-runningSum = coroutine $ \done yield ->
-  let loop total = do
-        inc <- yield total
-        loop (inc + total)
-  in loop 0
+----------------------------------------------------------------
+-- Test using the 'resume', 'done'', and 'yield'' helper functions
+
+runningSum :: Cc r (Result' r Int Int) -> C r (Result' r Int Int)
+runningSum cc0 =
+  let loop :: Cc r (Result' r Int Int) -> Int -> C r (Result' r Int Int)
+      loop cc !total = do
+        Resume inc cc' <- yield' cc total
+        loop cc' (inc + total)
+  in loop cc0 0
 
 test_runningSum :: C [Int] [Int]
 test_runningSum = do
-  Yield' o1 r1 <- t "runningSum" $ runningSum
-  Yield' o2 r2 <- t "r1" $ r1 2
-  Yield' o3 r3 <- t "r2" $ r2 4
-  Yield' o4 r4 <- t "r3" $ r3 8
+  Yield' o1 r1 <- t "runningSum" $ callcc' runningSum
+  Yield' o2 r2 <- t "r1" $ resume r1 2
+  Yield' o3 r3 <- t "r2" $ resume r2 4
+  Yield' o4 r4 <- t "r3" $ resume r3 8
   pure [o1,o2,o3,o4]
 
 test_runningSum' :: C [Int] [Int]
-test_runningSum' = loop 5 runningSum
+test_runningSum' = loop 1 6 (callcc' runningSum)
   where
-    loop :: Int -> C r (Result' r Int Int) -> C r [Int]
-    loop 0 r = return []
-    loop n r = do
-      Yield' o r' <- r
-      os <- loop (n-1) (r' n)
-      pure (o : os)
--}
+    loop :: Int -> Int -> C r (Result' r Int Int) -> C r [Int]
+    loop k stop r
+      | k == stop = return []
+      | otherwise = do
+        Yield' o r' <- r
+        os <- loop (k+1) stop (resume r' k)
+        pure (o : os)
