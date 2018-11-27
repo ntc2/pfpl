@@ -1,3 +1,4 @@
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE RankNTypes #-}
@@ -77,17 +78,23 @@ test_callcc = do
 
 main :: IO ()
 main = do
-  forM_ tests $ \(name, test) -> do
+  forM_ tests $ \(name, T test) -> do
     let s = show $ test
     -- Here @length s@ is a deepseq.
     length s `seq` printf "%s: %s\n" name s
   where
-    tests :: [(String, C Int Int)]
-    tests = [ ("nocallcc", test_nocallcc)
-            , ("callcc", test_callcc) ]
+    tests :: [(String, Test)]
+    tests = [ ("nocallcc", T test_nocallcc)
+            , ("callcc", T test_callcc)
+            , ("test1", T test1)
+            , ("test_coroutine2", T test_coroutine2)
+            ]
+
+data Test where
+  T :: Show a => C a a -> Test
 
 ----------------------------------------------------------------
--- Working implementation of co-routines that doesn't use callcc.
+-- Implementation of co-routines that doesn't use callcc.
 --
 -- The implementation is Eric and Iavor's idea. Compared to my broken
 -- implementation above, this one uses @Result@ as the @r@ param of
@@ -143,21 +150,48 @@ test2 = [o1,o2,o3]
     Yield o3 _  = r2 4
 
 ----------------------------------------------------------------
--- Buggy implementation of co-routines
+-- Implementation of co-routines using callcc
 
-data Result' r i o = Done' o | Yield' o (i -> C r (Result' r i o))
+callcc'' :: forall a r. String -> ((forall b. a -> C r b) -> C r a) -> C r a
+callcc'' msg f = C $ \(k :: a -> r) ->
+  let k' :: a -> C r b
+      -- A computation that ignores it's continuation @_@ and uses the
+      -- enclosing continuation @k@ instead.
+      k' a = t msg $ C (\_ -> k a)
+  in unC (f k') k
 
-coroutine ::
-  (forall b.
-    (o -> C r b) ->
-    (o -> C r i) ->
-    C r b) ->
-  C r (Result' r i o)
-coroutine body = do
-  let done k o = k (Done' o)
-  let yield k o = callcc' $ \cc -> k (Yield' o cc)
-  callcc' $ \cc -> body (done cc) (yield cc)
+newtype ContRec r i o =
+  ContRec { unContRec :: forall b. (i, Result' r i o -> C r b) }
 
+data Result' r i o = Done' o
+                   | Yield' o (forall b. ContRec r i o -> C r b)
+
+runningSum :: (i ~ Int, o ~ Int) =>
+  (forall b. Result' r i o -> C r b) -> C r (Result' r i o)
+runningSum cc0 = do
+  ContRec (i1, cc1) <- callcc'' "callcc 1" $ \c1 -> cc0 (Yield' 0 c1)
+  ContRec (i2, cc2) <- callcc'' "callcc 2" $ \c2 -> cc1 (Yield' 1 c2)
+  cc2 (Done' (i1 + i2))
+
+test1 :: C (String,Int) (String,Int)
+test1 = do
+  x <- callcc'' "running" $ \c -> runningSum c
+  case x of
+    Done' i -> pure ("0", i)
+    Yield' i r -> t "first yield" $ do
+      y <- callcc'' "yield1" $ \mc1 -> r (ContRec (8, mc1))
+      case y of
+        Done' i -> pure ("1", i)
+        Yield' i r -> t "second yield" $ do
+          z <- callcc'' "yield2" $ \mc2 -> r (ContRec (900, mc2))
+          case z of
+            Done' i -> pure ("2", i)
+            _ -> error "foo"
+
+test_coroutine2 :: C (String, Int) (String, Int)
+test_coroutine2 = return ("1", 1)
+
+{-
 runningSum :: C r (Result' r Int Int)
 runningSum = coroutine $ \done yield ->
   let loop total = do
@@ -182,3 +216,4 @@ test_runningSum' = loop 5 runningSum
       Yield' o r' <- r
       os <- loop (n-1) (r' n)
       pure (o : os)
+-}
