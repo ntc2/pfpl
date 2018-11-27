@@ -36,7 +36,7 @@ instance Monad (C r) where
 callcc :: forall a r b. ((a -> C r b) -> C r a) -> C r a
 callcc f = C $ \(k :: a -> r) ->
   let k' :: a -> C r b
-      -- A computation that ignores it's continuation @_@ and uses the
+      -- A computation that ignores its continuation @_@ and uses the
       -- enclosing continuation @k@ instead.
       k' a = C (\_ -> k a)
   in unC (f k') k
@@ -46,7 +46,7 @@ callcc f = C $ \(k :: a -> r) ->
 callcc' :: forall a r. ((forall b. a -> C r b) -> C r a) -> C r a
 callcc' f = C $ \(k :: a -> r) ->
   let k' :: a -> C r b
-      -- A computation that ignores it's continuation @_@ and uses the
+      -- A computation that ignores its continuation @_@ and uses the
       -- enclosing continuation @k@ instead.
       k' a = C (\_ -> k a)
   in unC (f k') k
@@ -111,7 +111,7 @@ done :: o -> M i o a
 done o = C (const (Done o))
 
 yield :: o -> M i o i
-yield o = C (Yield o)
+yield o = C (\k -> Yield o k)
 
 io :: IO a -> M i o a
 io act = C $ \k -> DoIO $ do
@@ -155,64 +155,37 @@ test2 = [o1,o2,o3]
 ----------------------------------------------------------------
 -- Implementation of co-routines using callcc
 
--- | Type of polymorphic current continuations, as provided by
--- 'callcc''. These continuations consume @a@ values and produce any
--- type, since they never return to the call site.
-type Cc r a = forall b. a -> C r b
-
 -- | A version of 'callcc'' with trace messages when the cc is run.
 callcc'' :: forall a r. String -> (Cc r a -> C r a) -> C r a
 callcc'' msg f = C $ \(k :: a -> r) ->
   let k' :: a -> C r b
-      -- A computation that ignores it's continuation @_@ and uses the
+      -- A computation that ignores its continuation @_@ and uses the
       -- enclosing continuation @k@ instead.
       k' a = t msg $ C (\_ -> k a)
   in unC (f k') k
+
+-- | Type of polymorphic current continuations, as provided by
+-- 'callcc''. These continuations consume @a@ values and produce any
+-- type (the @forall b@), since they never return to the call site.
+type Cc r a = forall b. a -> C r b
 
 -- | Data for resuming a coroutine: an input and continuation to
 -- receive the next output of the coroutine.
 data Resume r i o = Resume i (Cc r (Result' r i o))
 
 resume :: Cc r (Resume r i o) -> i -> C r (Result' r i o)
-resume r i = callcc' $ \cc' -> r (Resume i cc')
+resume r i = callcc' $ \cc -> r (Resume i cc)
 
 -- | An output from a coroutine.
 data Result' r i o = Done' o
+                     -- | An output and cc that resumes the coroutine.
                    | Yield' o (Cc r (Resume r i o))
 
 yield' :: Cc r (Result' r i o) -> o -> C r (Resume r i o)
-yield' cc o = callcc' $ \cc' -> cc (Yield' o cc')
+yield' cc o = callcc' $ \r -> cc (Yield' o r)
 
 done' :: Cc r (Result' r i o) -> o -> C r (Resume r i o)
 done' cc o = cc (Done' o)
-
-----------------------------------------------------------------
--- Test using the 'Resume' and 'Result'' constructors directly.
-
-sumTwice :: (i ~ Int, o ~ Int) =>
-  (Cc r (Result' r i o)) -> C r (Result' r i o)
-sumTwice cc0 = do
-  Resume i1 cc1 <- callcc'' "callcc 1" $ \c1 -> cc0 (Yield' 0 c1)
-  Resume i2 cc2 <- callcc'' "callcc 2" $ \c2 -> cc1 (Yield' 1 c2)
-  cc2 (Done' (i1 + i2))
-
-test1 :: C (String,Int) (String,Int)
-test1 = do
-  x <- callcc'' "running" $ \c -> sumTwice c
-  case x of
-    Done' i -> pure ("0", i)
-    Yield' i r -> t "first yield" $ do
-      y <- callcc'' "yield1" $ \mc1 -> r (Resume 8 mc1)
-      case y of
-        Done' i -> pure ("1", i)
-        Yield' i r -> t "second yield" $ do
-          z <- callcc'' "yield2" $ \mc2 -> r (Resume 900 mc2)
-          case z of
-            Done' i -> pure ("2", i)
-            _ -> error "foo"
-
-test_coroutine2 :: C (String, Int) (String, Int)
-test_coroutine2 = return ("1", 1)
 
 ----------------------------------------------------------------
 -- Test using the 'resume', 'done'', and 'yield'' helper functions
@@ -243,3 +216,31 @@ test_runningSum' = loop 1 6 (callcc' runningSum)
         Yield' o r' <- r
         os <- loop (k+1) stop (resume r' k)
         pure (o : os)
+
+----------------------------------------------------------------
+-- Test using the 'Resume' and 'Result'' constructors directly.
+
+sumTwice :: (i ~ Int, o ~ Int) =>
+  (Cc r (Result' r i o)) -> C r (Result' r i o)
+sumTwice cc0 = do
+  Resume i1 cc1 <- callcc'' "callcc 1" $ \c1 -> cc0 (Yield' 0 c1)
+  Resume i2 cc2 <- callcc'' "callcc 2" $ \c2 -> cc1 (Yield' 1 c2)
+  cc2 (Done' (i1 + i2))
+
+test1 :: C (String,Int) (String,Int)
+test1 = do
+  x <- callcc'' "running" $ \c -> sumTwice c
+  case x of
+    Done' i -> pure ("0", i)
+    Yield' i r -> t "first yield" $ do
+      y <- callcc'' "yield1" $ \mc1 -> r (Resume 8 mc1)
+      case y of
+        Done' i -> pure ("1", i)
+        Yield' i r -> t "second yield" $ do
+          z <- callcc'' "yield2" $ \mc2 -> r (Resume 900 mc2)
+          case z of
+            Done' i -> pure ("2", i)
+            _ -> error "foo"
+
+test_coroutine2 :: C (String, Int) (String, Int)
+test_coroutine2 = return ("1", 1)
