@@ -168,29 +168,36 @@ test_runningSum' = loop 1 6 (callcc' runningSum)
 ----------------------------------------------------------------
 -- Coroutines with implicit caller continuations
 
--- Can't use our polymorphic 'Cc' continuation here as the state type
--- because GHC complains about "impredicativity". However, we only
--- ever use the caller continuation at a single type in coroutines, so
--- no problem.
-type CoroutineM r i o a = StateT (Result' r i o -> C r (Resume r i o)) (C r) a
+-- Can't use our polymorphic 'Cc' continuation here directly as the
+-- state type in 'CoroutineM' because GHC complains about
+-- "impredicativity". So, we wrap the 'Cc' type in 'WrappedCc' to hide
+-- the polymorphism.
+newtype WrappedCc r a = Wrap { unwrap :: Cc r a }
+type CoroutineM r i o a = StateT (WrappedCc r (Result' r i o)) (C r) a
 type Coroutine r i o = forall a. CoroutineM r i o a
 
+-- | Like 'yield'', but with implicit caller continuation in the state
+-- monad.
 yield2 :: o -> CoroutineM r i o i
 yield2 o = do
   caller <- get
-  Resume i caller' <- lift (callcc' $ \r -> caller (Yield' o r))
-  put caller'
+  Resume i caller' <- lift (callcc' $ \r -> unwrap caller (Yield' o r))
+  put (Wrap caller')
   return i
 
+-- | Like 'done'', but with implicit caller continuation in the state
+-- monad.
 done2 :: o -> forall a. CoroutineM r i o a
 done2 o = do
   caller <- get
-  -- Never actually returns. Need the 'fmap' to work around lack of
-  -- polymorphism in 'CoroutineM's continuation state.
-  fmap (error "done2") $ lift (caller (Done' o))
+  lift (unwrap caller (Done' o))
 
+-- | Start a coroutine. The same 'resume' from above still works for
+-- resuming here.
 start :: Coroutine r i o -> C r (Result' r i o)
-start cr = callcc' $ \caller -> fmap fst $ runStateT cr caller
+start cr = callcc' $ \caller -> fmap fst $ runStateT cr (Wrap caller)
+
+----------------------------------------------------------------
 
 runningSum2 :: Coroutine r Int Int
 runningSum2 =
