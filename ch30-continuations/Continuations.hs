@@ -10,6 +10,8 @@ import Control.Monad
 import Text.Printf
 import Debug.Trace
 import Data.Void
+import Control.Monad.Trans.State
+import Control.Monad.Trans ( lift )
 
 t :: String -> a -> a
 t msg = trace (printf "XXX: %s" msg)
@@ -91,6 +93,8 @@ main = do
             , ("test_coroutine2", T test_coroutine2)
             , ("test_runningSum", T test_runningSum)
             , ("test_runningSum'", T test_runningSum')
+            , ("test_runningSum2", T test_runningSum2)
+            , ("test_runningSum2'", T test_runningSum2')
             ]
 
 data Test where
@@ -208,6 +212,60 @@ test_runningSum = do
 
 test_runningSum' :: C [Int] [Int]
 test_runningSum' = loop 1 6 (callcc' runningSum)
+  where
+    loop :: Int -> Int -> C r (Result' r Int Int) -> C r [Int]
+    loop k stop r
+      | k == stop = return []
+      | otherwise = do
+        Yield' o r' <- r
+        os <- loop (k+1) stop (resume r' k)
+        pure (o : os)
+
+----------------------------------------------------------------
+-- Coroutines with implicit caller continuations
+
+-- Can't use our polymorphic 'Cc' continuation here as the state type
+-- because GHC complains about "impredicativity". However, we only
+-- ever use the caller continuation at a single type in coroutines, so
+-- no problem.
+type CoroutineM r i o a = StateT (Result' r i o -> C r (Resume r i o)) (C r) a
+type Coroutine r i o = forall a. CoroutineM r i o a
+
+yield2 :: o -> CoroutineM r i o i
+yield2 o = do
+  caller <- get
+  Resume i caller' <- lift (callcc' $ \r -> caller (Yield' o r))
+  put caller'
+  return i
+
+done2 :: o -> forall a. CoroutineM r i o a
+done2 o = do
+  caller <- get
+  -- Never actually returns. Need the 'fmap' to work around lack of
+  -- polymorphism in 'CoroutineM's continuation state.
+  fmap (error "done2") $ lift (caller (Done' o))
+
+start :: Coroutine r i o -> C r (Result' r i o)
+start cr = callcc' $ \caller -> fmap fst $ runStateT cr caller
+
+runningSum2 :: Coroutine r Int Int
+runningSum2 =
+  let loop :: Int -> Coroutine r Int Int
+      loop !total = do
+        inc <- yield2 total
+        loop (inc + total)
+  in loop 0
+
+test_runningSum2 :: C [Int] [Int]
+test_runningSum2 = do
+  Yield' o1 r1 <- t "runningSum" $ start runningSum2
+  Yield' o2 r2 <- t "r1" $ resume r1 2
+  Yield' o3 r3 <- t "r2" $ resume r2 4
+  Yield' o4 r4 <- t "r3" $ resume r3 8
+  pure [o1,o2,o3,o4]
+
+test_runningSum2' :: C [Int] [Int]
+test_runningSum2' = loop 1 6 (start runningSum2)
   where
     loop :: Int -> Int -> C r (Result' r Int Int) -> C r [Int]
     loop k stop r
