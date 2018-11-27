@@ -101,62 +101,6 @@ data Test where
   T :: Show a => C a a -> Test
 
 ----------------------------------------------------------------
--- Implementation of co-routines that doesn't use callcc.
---
--- The implementation is Eric and Iavor's idea. Compared to my broken
--- implementation above, this one uses @Result@ as the @r@ param of
--- the continuation monad, not as result type.
-
-data Result i o = Done o | Yield o (i -> Result i o) | DoIO (IO (Result i o))
-
-type M i o a = C (Result i o) a
-
-done :: o -> M i o a
-done o = C (const (Done o))
-
-yield :: o -> M i o i
-yield o = C (\k -> Yield o k)
-
-io :: IO a -> M i o a
-io act = C $ \k -> DoIO $ do
-  a <- act
-  pure (k a)
-
-runM :: M i o Void -> Result i o
-runM (C f) = f absurd
-
--- | Interpreter for 'Result' computations.
---
--- Given a list of inputs it computes a list of outputs.
-interp :: [i] -> Result i o -> IO [o]
-interp ins r = case r of
-  Done o -> pure [o]
-  Yield o k -> case ins of
-    (i:ins') -> (o :) <$> interp ins' (k i)
-    _ -> pure [o]
-  DoIO act -> do
-    r <- act
-    interp ins r
-
-rsum :: M Int Int a
-rsum = loop 0
-  where
-    loop total = do
-      io (printf "%i" total)
-      i <- yield total
-      loop (i + total)
-
-test3 :: IO [Int]
-test3 = interp [2,4] (runM rsum)
-
-test2 :: [Int]
-test2 = [o1,o2,o3]
-  where
-    Yield o1 r1 = runM rsum
-    Yield o2 r2 = r1 2
-    Yield o3 _  = r2 4
-
-----------------------------------------------------------------
 -- Implementation of co-routines using callcc
 
 -- | A version of 'callcc'' with trace messages when the cc is run.
@@ -302,3 +246,62 @@ test1 = do
 
 test_coroutine2 :: C (String, Int) (String, Int)
 test_coroutine2 = return ("1", 1)
+
+----------------------------------------------------------------
+-- Implementation of co-routines that doesn't use callcc.
+--
+-- The implementation is Eric and Iavor's idea. Compared to my
+-- callcc-using implementation above, this one uses @Result@ as the
+-- @r@ param of the continuation monad, not as result type, which
+-- means all the coroutines need to have the same input and output
+-- types, which is the problem we were trying to avoid in the first
+-- place vs the PFPL example.
+
+data Result i o = Done o | Yield o (i -> Result i o) | DoIO (IO (Result i o))
+
+type M i o a = C (Result i o) a
+
+done :: o -> M i o a
+done o = C (const (Done o))
+
+yield :: o -> M i o i
+yield o = C (\k -> Yield o k)
+
+io :: IO a -> M i o a
+io act = C $ \k -> DoIO $ do
+  a <- act
+  pure (k a)
+
+runM :: M i o Void -> Result i o
+runM (C f) = f absurd
+
+-- | Interpreter for 'Result' computations.
+--
+-- Given a list of inputs it computes a list of outputs.
+interp :: [i] -> Result i o -> IO [o]
+interp ins r = case r of
+  Done o -> pure [o]
+  Yield o k -> case ins of
+    (i:ins') -> (o :) <$> interp ins' (k i)
+    _ -> pure [o]
+  DoIO act -> do
+    r <- act
+    interp ins r
+
+rsum :: M Int Int a
+rsum = loop 0
+  where
+    loop total = do
+      io (printf "%i" total)
+      i <- yield total
+      loop (i + total)
+
+test3 :: IO [Int]
+test3 = interp [2,4] (runM rsum)
+
+test2 :: [Int]
+test2 = [o1,o2,o3]
+  where
+    Yield o1 r1 = runM rsum
+    Yield o2 r2 = r1 2
+    Yield o3 _  = r2 4
