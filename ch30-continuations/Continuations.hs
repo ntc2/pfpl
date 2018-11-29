@@ -196,7 +196,7 @@ done2 o = do
 -- | Start a coroutine. The same 'resume' from above still works for
 -- resuming here.
 start :: Coroutine r i o -> C r (Result' r i o)
-start cr = callcc' $ \caller -> fmap fst $ runStateT cr (Wrap caller)
+start cr = callcc' $ \caller -> evalStateT cr (Wrap caller)
 
 ----------------------------------------------------------------
 
