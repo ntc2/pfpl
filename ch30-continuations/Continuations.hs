@@ -200,6 +200,7 @@ start cr = callcc' $ \caller -> fmap fst $ runStateT cr (Wrap caller)
 
 ----------------------------------------------------------------
 
+-- | Yields the running sum of all inputs so far. Never 'Done''s.
 runningSum2 :: Coroutine r Int Int
 runningSum2 =
   let loop :: Int -> Coroutine r Int Int
@@ -229,6 +230,9 @@ test_runningSum2' = loop 1 6 (start runningSum2)
 
 -- | Like Python xrange, except it returns the first value greater
 -- than the stop condition, i.e. the sequence is never empty.
+--
+-- This is a coroutine that doesn't receive inputs from the caller
+-- (the input type is unit).
 xrange :: Int -> Int -> Int -> Coroutine r () Int
 xrange start stop step
   | start >= stop =
