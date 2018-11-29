@@ -95,6 +95,7 @@ main = do
             , ("test_runningSum'", T test_runningSum')
             , ("test_runningSum2", T test_runningSum2)
             , ("test_runningSum2'", T test_runningSum2')
+            , ("test_xrange", T test_xrange)
             ]
 
 data Test where
@@ -225,6 +226,31 @@ test_runningSum2' = loop 1 6 (start runningSum2)
         Yield' o r' <- r
         os <- loop (k+1) stop (resume r' k)
         pure (o : os)
+
+-- | Like Python xrange, except it returns the first value greater
+-- than the stop condition, i.e. the sequence is never empty.
+xrange :: Int -> Int -> Int -> Coroutine r () Int
+xrange start stop step
+  | start >= stop =
+      done2 start
+  | otherwise = do
+      yield2 start
+      xrange (start + step) stop step
+
+toList :: Coroutine r () a -> C r [a]
+toList cr = do
+  result <- start cr
+  go result
+  where
+    go :: Result' r () a -> C r [a]
+    go (Done' x) = return [x]
+    go (Yield' x r) = do
+      result <- resume r ()
+      xs <- go result
+      pure (x:xs)
+
+test_xrange :: C [Int] [Int]
+test_xrange = toList (xrange 1 20 4)
 
 ----------------------------------------------------------------
 -- Test using the 'Resume' and 'Result'' constructors directly.
