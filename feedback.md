@@ -58,11 +58,64 @@ about null pointers.
 
 # Ch 12
 
+T: p188: rule 12.9 premises should be "\Gamma |- p : \phi_1 \or \phi_2"
+
+T: p188: rule 12.10a premises second term should be "\Gamma |- p_1 : \phi_1"
+
+# Ch 15
+
+S: p131: the paragraph starting "Intuitively speaking" is hard to
+read.  It relates to 15.8a, where "every value of an inductive type"
+refers to the value and type on the conclusion of 15.8a, and the
+"value of the unfolding of the inductive type" refers to the premises
+of 15.8a.  Being able to see this relationship between the
+mathematical definition and the text helps to understand both.
+
+# Ch 20
+
+S: p172: the understanding of the dynamics for FPC would be helped by
+noting that they can be compared to \bold{M} in Chapter 15, which
+allowed inductive/coinductive types but which were total.  The
+difference between \bold{M} and \bold{FPC} is that \bold{M} restricted
+\it{t} to the positive position, but \bold{FPC} allows \it{t} in the
+negative position, therefore rendering \bold{FPC} partial.
+
+# Ch 21
+
+T: p181: should rule 21.2a actually be:
+
+        \Gamma |- u ok
+        --------------
+        \Gamma |- u \equiv u
+
+   to state that u is equivalent only if well formed (i.e. move the
+   judgement in the conclusion to the premises)?
+
 # Ch 24
 
 T: p209, 211, 216: like in chapters 10 and 11, two different concrete
 syntaxes are used for sums and products, but only one of them was ever
 defined in the relevant syntax tables.
+
+# Ch 28
+
+T: p259 the sentence "let e' be such that k;ap(lam{\tau}(x.e1); -)
+\bowtie e2 = e'" is a call-by-value dynamic, whereas the prior
+definitions (specifically 28.5c) is call-by-name.  The call-by-name
+definitions for p259 would be
+
+    --------------------------------------------------------------------------------
+    k;ap(-;e2) \ltriangle lam{\tau}(x.e1) |-> k;ap(lam{\tau}(x.e1); -) \rtriangle e2
+
+
+    ----------------------------------------------------------------
+    k;ap((lam{\tau}(x.e1);-) \ltriangle e2 |-> k \rtriangle [e2/x]e1
+
+# Ch 30
+
+T: p267: "To take another example, given that k has type \tau cont and
+f has type \tau' -` \tau, return k' of type return a continuation k'
+of ..."  remove the "return k' of type".
 
 # Index
 
