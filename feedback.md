@@ -2,16 +2,18 @@
 
 How far we've recorded feedback through:
 
-N: ch 11
-M: ch 11
-K: ch 11
-As a group: Ch 11
+N: ch 17
+M: ch ??
+K: ch ??
+As a group: Ch 17
  
 For mapping symbols back to latex, use
 http://detexify.kirelabs.org/classify.html
 
 
 # Legend
+
+E = Error
 
 S = Suggestion
 
@@ -58,18 +60,60 @@ about null pointers.
 
 # Ch 12
 
-T: p188: rule 12.9 premises should be "\Gamma |- p : \phi_1 \or \phi_2"
+T: p100: in rule 12.9 the existing premises are wrong and should
+instead be "\Gamma |- p : \phi_1 \wedge \phi_2"
 
-T: p188: rule 12.10a premises second term should be "\Gamma |- p_1 : \phi_1"
+T: p100: rule 12.10a the second premise is wrong and should 
+be "\Gamma |- p_1 : \phi_1"
+
+# Ch 13
+
+T: p107: "where $m \ge 0$, in which the variables $u_1,\ldots,u_n$
+stand" should have "$u_m$" instead of "$u_n$"
+
+S: p111: reword "All proofs in classical logic proceed by
+contradicting the assumption that it is false." The "it is false" here
+is confusing. What does "it" refer to?
 
 # Ch 15
+
+E: p126: the "recursor" $rec_{nat}$ given by rules 15.2b,c is more
+akin to the "iterator" of Ch 9 than the "recursor" of Ch 9, because
+the "body" $x.e_1$ of $rec_{nat}$ receives the recursive call in $x$
+but does not receive the predecessor. So, Exercise 15.2 doesn't make
+sense, and neither does calling $rec_{nat}$ the "recursor".
+
+S: p128: in the $Typ$ grammar in 15.2.1 many type formers are omitted,
+e.g. $sum(\tau_1; \tau_2)$. Mention that they are omitted. In other
+words, say that the given $Typ$ is implicitly an extension of the
+$Typ$ grammar for $T$.
+
+T: p131: remove "to" in "or to the successor of some other".
 
 S: p131: the paragraph starting "Intuitively speaking" is hard to
 read.  It relates to 15.8a, where "every value of an inductive type"
 refers to the value and type on the conclusion of 15.8a, and the
 "value of the unfolding of the inductive type" refers to the premises
 of 15.8a.  Being able to see this relationship between the
-mathematical definition and the text helps to understand both.
+mathematical definition and the text helps to understand
+both. Similarly, the discussion of coninductive unfoldings here is
+about Rule 15.8c. It would probably be more clear if you referenced
+those rules explicitly (parenthetically?) in this paragraph
+
+# Ch 17
+
+T: p147: "covnention" should be "convention".
+
+E: p149, p151: on p149 the implementations of the queue type don't
+have the $opt$ in their type (i.e. see $e_r$ which implements $rem$,
+has wrong type on p149 and p150), but on p151 they do. Ch 18 has the
+$opt$ consistently, so everything should be fixed to have $opt$.
+
+T?: p152: should the $\cong$ here be $\equiv$ instead?
+I.e. definitional equality instead of isomorphism.
+
+T: p152: in the definition of $rem$ the $\langle bs, fs' \rangle$
+should be wrapped in $just(\langle f, <here> \rangle)$.
 
 # Ch 20
 
