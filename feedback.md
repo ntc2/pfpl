@@ -2,14 +2,13 @@
 
 How far we've recorded feedback through:
 
-N: ch 17
+N: ch 23
 M: ch ??
-K: ch ??
+K: whole book
 As a group: Ch 17
  
 For mapping symbols back to latex, use
 http://detexify.kirelabs.org/classify.html
-
 
 # Legend
 
@@ -18,6 +17,11 @@ E = Error
 S = Suggestion
 
 T = Typo
+
+# Markup
+
+We've used pseudo Latex for math; it's certainly not correct Latex, so
+hopefully the intent will clear.
 
 # Ch 4
 S: p37, exercise 4.1: make an analogy between analytic mode <-> type
@@ -115,7 +119,76 @@ I.e. definitional equality instead of isomorphism.
 T: p152: in the definition of $rem$ the $\langle bs, fs' \rangle$
 should be wrapped in $just(\langle f, <here> \rangle)$.
 
+# Ch 18
+
+T: p154: the type $emp$ in the queue example is wrong, it should be
+$\forall t :: T. q[t]$
+
+T: p154: "an implementation of the existential given in the preceding
+paragraph *have* to give": the "have" should be "has".
+
+S: p154: it's not clear what "accounts for" means in "The extension
+accounts for definitional equality of constructors". You follow with
+an example, but a general description of what you mean would also be
+good. Perhaps something along the lines of "The extension includes a
+notion of \"definitional equality\" of constructors, meaning that it
+defines when two types $\tau$ and $\tau'$ are equal up to type-level
+computation (see Section 18.2), and ensures that $\Gamma |- t : \tau$
+implies $\Gamma |- t : \tau'$ whenever $\tau$ and $\tau'$ are
+definitionally equal types (see Rule 18.3)."
+
+S: p156: remind us what "the three constants" are again, since
+e.g. it's natural to think of the unit type $\langle \rangle$ as a
+"constant", but it's not one of the three constants you're referring
+to.
+
+# Ch 19
+
+S: p161: tell us where the name PCF comes from ("partial computable
+functions"?)
+
+S: p165: reword "Recursive functions are defined in PCF using
+recursive functions" to "Recursive functions are defined in PCF using
+fixpoints"
+
+S: p166: when defining the minimization operator $\phi$, tell us what
+kind of function it is (primitive recursive?). Also, we've been
+talking about $\mathbb{N} \partial \mathbb{N}$ functions, and now
+you've introduced a $\mathbb{N} x \mathbb{N} \partial \mathbb{N}$
+function. Perhaps a footnote pointing out that they're equivalent
+would be helpful, i.e. pointing out that encoding and decoding between
+nats and pairs of nats is possible here.
+
+S: p166: in the proof sketch for Theorem 19.3, say that the "evaluator
+for expressions of PCF" is the thing you later call $\phi_{univ}$ two
+paragraphs farther down.
+
+T: p166: in "given the code $\bar{\godel{e}}$ of a closed expression"
+the "$\bar{\godel{e}}$" should be "$\godel{e}$, since $\phi_{univ}$ is
+defined on numbers $\mathbb{N}$, not expressions of type $nat$.
+
+S: p167, top of page: explain that $e_{univ}$ is the PCF
+implementation of $\phi_{univ}$,
+i.e. $e_{univ}(\bar{\godel{e}})(\bar{m}) \equiv e(\bar{m})$ forall $e$
+in PCF and $m,n \in \mathbb{N}$.
+
+S: p168: give a citation for "Blum Size Theorem".
+
+T: p169, Exercise 19.5: "function specified [as] a function of two arguments", the "as" is missing.
+
+S: p169, Exercise 19.5: be clear that $e$ is total, or explain that
+it's not. In other words, clarify that $e$ converges even if *both*
+arguments diverge.
+
 # Ch 20
+
+S: p171, intro: tell us what "FPC" stands for.
+
+S: p171, bottom of page: when you say "inherited from the preceding"
+development, tell us which development. In particular, it's not clear
+if "FPC" is general recursion or not;in Section 20.3 we learn that
+recursive types allow us to derive general recursion, but it's not
+clear if it's also inherited.
 
 S: p172: the understanding of the dynamics for FPC would be helped by
 noting that they can be compared to \bold{M} in Chapter 15, which
@@ -134,6 +207,16 @@ T: p181: should rule 21.2a actually be:
 
    to state that u is equivalent only if well formed (i.e. move the
    judgement in the conclusion to the premises)?
+
+T: p187, top: missing parens on both applied lambdas. the
+$\lambda(x)u_1(u_2)$ should be $\left(\lambda(x)u_1\right)(u_2)$, and
+similar for the other application.
+
+# Ch 22
+
+T: p195, top: in the abstract syntax of the first expression, the
+$ifz$ should be applied to $y$ but is not. i.e. insert $(y)$ between
+the last $\}$ and last $)))$.
 
 # Ch 24
 
