@@ -2,7 +2,7 @@
 
 How far we've recorded feedback through:
 
-N: ch 23
+N: ch 30 p267
 M: ch ??
 K: whole book
 As a group: Ch 17
@@ -17,6 +17,9 @@ E = Error
 S = Suggestion
 
 T = Typo
+
+Q = Question (perhaps a euphemism for "I'm worried this doesn't make
+    sense")
 
 # Markup
 
@@ -220,29 +223,98 @@ the last $\}$ and last $)))$.
 
 # Ch 24
 
+S: p209, middle of page: remove ", other than bind it to a variable,"
+and replace "operation" with "elimination". There are many
+"operations" we can perform besides binding to a variable, e.g. we can
+use the value to build up a bigger value, or apply a function to it,
+or ...
+
+T: p211, top: add "is" in "A type constructor [is] covariant in an
+argument".
+
+T?: p214, bottom: the "\tau :: T" premise on Rule 24.15b seems out of
+place / redundant, since the system we're studying doesn't have higher
+kinds. The intro to this subsection earlier on the page says we're
+extending the systems from chapters 16 and 17, but higher kinds were
+introduced in Ch 18.
+
 T: p209, 211, 216: like in chapters 10 and 11, two different concrete
 syntaxes are used for sums and products, but only one of them was ever
 defined in the relevant syntax tables.
 
+# Ch 25
+
+T: p219, middle: replace "a" with "as" in "serve *a* behavioral
+specifications of expressions".
+
+T: p221, bottom: add "at" in "the conjunction $\num ! \phi_1$ and
+$\fun ! \phi_2$ entails any refinement [at] all".
+
+T: p223: the premise of Rule 25.4d should have "$e \elem_{dyn}$"
+instead of "$e \elem_{dyn -> dyn}$".
+
+T: p224: in the conclusion of Rule 25.5d should have $\phi_2$ instead
+of $\phi_1$.
+
+S?: p225, bottom: you say "we may combine rules (25.3b) and (25.4a) to
+derive the judgment $num ! \bar{n} \elem_{dyn} \top$", but doesn't
+this follow directly from rules (25.4a) and (25.8a,b), and so
+subsumption is not relevant here?
+
+T: p228, middle: missing "prove" in "we may [prove] type preservation
+and progress".
+
 # Ch 28
 
-T: p259 the sentence "let e' be such that k;ap(lam{\tau}(x.e1); -)
-\bowtie e2 = e'" is a call-by-value dynamic, whereas the prior
-definitions (specifically 28.5c) is call-by-name.  The call-by-name
-definitions for p259 would be
+E: p255,p258,p259: on p259 the sentence "let e' be such that
+k;ap(lam{\tau}(x.e1);-) \bowtie e2 = e'" is a call-by-value dynamic,
+whereas the prior definitions (specifically Rule 28.5c) is
+call-by-name.  The missing call-by-value rules needed for p259 to make
+sense could be
 
-    --------------------------------------------------------------------------------
-    k;ap(-;e2) \ltriangle lam{\tau}(x.e1) |-> k;ap(lam{\tau}(x.e1); -) \rtriangle e2
+* on p255, as part of the 28.5 rules:
 
+        ------------------------------------------------------
+        k;ap(-;e2) \ltriangle e1 |-> k;ap(e1; -) \rtriangle e2
 
-    ----------------------------------------------------------------
-    k;ap((lam{\tau}(x.e1);-) \ltriangle e2 |-> k \rtriangle [e2/x]e1
+        ----------------------------------------------------------------
+        k;ap((lam{\tau}(x.e1);-) \ltriangle e2 |-> k \rtriangle [e2/x]e1
+
+* on p258, as part of the 28.12 rules:
+
+        k \bowtie ap(e1;e2) = e
+        -------------------------
+        k;ap(e1;-) \bowtie e2 = e
+
+# Ch 29
+
+T?: p261, Rule 29.3a: shouldn't the rule be
+
+    -----------------------------
+    \epsilon \ltriangle e initial
+
+S?: p161, bottom: add an exercise concerned with defining the
+extension mentioned in "the definition of stack typing given in Ch 28
+can be extended". However, this might already be part of Exercise
+29.1?
+
+Q?, p262, middle: it says "we use a by-value interpretation to avoid
+the problem of imprecise exceptions that arises under a by-name
+interpretation". Perhaps this is related to by-name/by-value confusion
+in the previous chapters on p255,258,259?
+
+Q?, p263, Rule 29.6c: why no "e val" premise on Rule 29.6c? Or
+equivalently, why have the "e val" premise on Rule 29.6b? I expect
+either both or neither, but not half.
+
+Q?, p265, exercises 29.4, 29.5: what's $MPCF$? Is it defined in the
+book somewhere?
 
 # Ch 30
 
-T: p267: "To take another example, given that k has type \tau cont and
-f has type \tau' -` \tau, return k' of type return a continuation k'
-of ..."  remove the "return k' of type".
+T: p267: "To take another example, given that $k$ has type $\tau cont$
+and $f$ has type $\tau' \rightharpoonup \tau$, *return $k'$ of type*
+return a continuation $k'$ of ..."  remove the "return $k'$ of type".
 
 # Index
 
