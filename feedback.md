@@ -316,6 +316,89 @@ T: p267: "To take another example, given that $k$ has type $\tau cont$
 and $f$ has type $\tau' \rightharpoonup \tau$, *return $k'$ of type*
 return a continuation $k'$ of ..."  remove the "return $k'$ of type".
 
+T: p268, Rule 30.2: the premise is $k : \tau$ but should be $k
+\vartriangleleft : \tau$.
+
+T: p269, Lemma 30.1: like the last typo, the $k : \tau$ in the
+conclusion should be $k \vartriangleleft : \tau$.
+
+T?: p270: I worry you don't use the terms "routine" and "coroutine"
+consistently here. For example, the type $rout$ is called "coroutine",
+as is the type $coro$. But I think there are other inconsistencies
+too, but rereading it now I find it too confusing to be sure.
+
+S: p273: reference Exercise 13.1 in Exercise 30.2.
+
+# Ch 31
+
+S: p277, 2nd paragraph: explain that "renamed at will" for symbols
+here means that symbols will be renamed *dynamically* at run time. In
+other words, $new$/$decl$/whatever symbol primitive creates *fresh*
+symbols at run time in the scope free dynamics. A lot of this dynamic
+renaming happens in Ch 36, but we didn't realize that here in Ch 31
+and got confused later.
+
+S: p279, definition of "mobility condition" near the top: better to
+state the definition in the equivalent but simpler style of Ch 34,
+i.e.
+
+    if tau mobile and |-_{Sigma} e : tau and e val_{Sigma}
+    then |-_{emptyset} e : tau and e val_{emptyset}
+
+
+S: p279, beginning of section 31.1.2: remind the reader that all types
+are mobile in the scope free dynamics.
+
+Q/S: p279, state notation for scope free dynamics: why $nu$ in $\nu
+\Sigma \{ e \}$? If there's a mnemonic here then explain it.
+
+S: p279, bottom: following up on the p277 suggestion, tell the reader
+that the scope-free dynamics require *dynamic* fresh symbol generation
+and renaming, and give an example. For example, evaluation of
+
+    let n = new{nat} a.0 in (n,n)
+
+requires dynamic symbol generation and renaming for $a$ in evaluating
+the right occurrence of $n$ in the tuple $(n,n)$.
+
+E: p283, exercise 31.5: the $MPCF$ here that you claim is described in
+Ch 29 is actually only mentioned in an exercise in Ch 29, and even
+there seems to be a "dangling" reference. It seems you must have
+removed the section that describes this language.
+
+# Ch 32
+
+S: p285, middle: explain that the "big dot" in $a \hookarrow <big
+dot>$ is being defined here / we aren't supposed to have seen it
+earlier and already know what it means.
+
+T: p288, bottom: in "the choice of *fluid* on which a $\get$ or $\put$
+acts" the "fluid" should be "symbol".
+
+# Ch 33
+
+# Ch 34
+
+S: p305, top: remove the definition of the judgment $m || \mu
+ok_{\Sigma}$. It's never used. You could use it in the statement of
+Theorem 34.1, but I think it's better to just delete the definition.
+
+S: p306, middle: call the derived $if$ here $ifz$ (or $ifzero$ if you
+don't want to "abuse notation"), like the underlying
+primitive. Calling it $if$ is confusing, because its semantics are the
+opposite of $if$ in common real world languages (e.g. C, Python),
+where zero is false and all other values are true. (I guess zero is
+true in common shells, e.g. sh, bash, zsh, but I expect most people
+are more familiar with the opposite convention in C and Python).
+
+E: p310, Exercise 34.2: the "fix" expression doesn't make sense: $p$
+is used both as the recursive binding in $fix p$ and the argument
+binding in $\lambda(p : \tau)$. Not sure what's intended here.
+
+# Ch 35
+
+
+
 # Index
 
 S: add symbols to the index, for example add $\triangleq$ to the index
