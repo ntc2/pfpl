@@ -359,7 +359,9 @@ and renaming, and give an example. For example, evaluation of
     let n = new{nat} a.0 in (n,n)
 
 requires dynamic symbol generation and renaming for $a$ in evaluating
-the right occurrence of $n$ in the tuple $(n,n)$.
+the right occurrence of $n$ in the tuple $(n,n)$. (The rules 36.3c and
+36.3h include explicit dynamic symbol generation, but our confusion
+was around dynamic generation + renaming.)
 
 E: p283, exercise 31.5: the $MPCF$ here that you claim is described in
 Ch 29 is actually only mentioned in an exercise in Ch 29, and even
@@ -397,6 +399,144 @@ binding in $\lambda(p : \tau)$. Not sure what's intended here.
 
 # Ch 35
 
+T: p313, end of first paragraph: missing "same" in "any two references
+may refer to the [same] assignable".
+
+S: p313, end of first paragraph of Section 35.1: the last sentence is
+confusing with two uses of "any given assignable" not referring to the
+same given assignable. A possible rewording is "We can write such a
+procedure for any [specific] assignable, $a$, but what if we wish to
+write a generic procedure that works for [all assignables
+uniformly]?".
+
+T: p313, bottom: missing "to" in "One way to do this is [to] give the
+procedure".
+
+T: p314, top: the definition of $tau cap$ has $nat$ in place of
+$tau$. I.e. it should be $tau cap \defeq = tau cmd x (tau \partial tau cmd)$.
+
+S: p318, beginning of Section 35.4: you should forward reference the
+"back patch" example in Section 35.5, when giving the example code
+that presumably uses back patching to set the reference $a$.
+
+T: p318: the "mu : Sigma" in "Cyclic dependencies complicate the
+judgment *mu : Sigma*." should be "nu Sigma \{ m || mu \} ok".
+
+S: p318: in the definition of $|-_{Sigma'} mu : Sigma$, say more about
+the reason for the two different symbol contexts $Sigma$ and $Sigma'$.
+
+T: p319, proof of Theorem 35.2: you say "For the second statement, we
+prove the stronger form <stronger form>", but the "stronger" form is
+not any stronger. Rather, it's identical after unfolding the
+definition of $nu Sigma \{ m || mu \} ok$.
+
+# Ch 36
+
+T: p323, 2nd to last and last paragraphs: the "by name" should be "by
+need" instead, in "Lazy languages adopt the opposite strategy,
+preferring a *by name* dynamics for functions" and in "called LPCF, in
+which functions are called *by name*".
+
+S: p324, top: reorder the sentences describing "by-name" and "by-need"
+to describe "by-need" first, and then explain "by-name" as a
+contrast. I.e., instead of "By-name function application replicates
+the unevaluated argument by substitution, which means that there can
+arise many copies of the same expression, each evaluated separately,
+if at all. By-need evaluation uses a device called /memoization/ to
+share all such copies of an argument and to ensure that if it
+evaluated at all, its value is stored to so that all other uses of it
+will avoid recomputation.", try something like "By-need evaluation
+uses a device called /memoization/ to share all such copies of an
+argument and to ensure that if it evaluated at all, its value is
+stored to so that all other uses of it will avoid recomputation. In
+contrast, by-name function application, which we saw in earlier
+chapters, replicates the unevaluated argument by substitution, which
+means that there can arise many copies of the same expression, each
+evaluated separately, if at all."
+
+S: p324, second paragraph: insert "is a memo table that" into "and mu
+[is a memo table that] maps", to make it more clear how "mu" relates
+to the mention of "memoization" and "memo table" in the previous
+paragraph.
+
+S: p324, end of second paragraph: get rid of "$via a$", the abstract
+syntax for "$@a$". You don't use it in any rules and only ever mention
+it again when repeating that it's abstract syntax.
+
+T: p326, 4th paragraph: missing "@" in "the expression $fix x:tau is
+x$ associates the expression $[@]a$ to $a$".
+
+T: p328, proof of theorem 36.2: you say "Consider Rule (19.1a)". That
+is surely not the rule you intend; I'm not sure which you rule you
+meant.
+
+S: p330, top: add big parens in "$rec t is [\left(](unit + (nat x t))
+susp [\right)]$.
+
+S: p330, middle: extend the sentence "The expression $lcell[a]$ is a
+reference to the suspension named $a$" by adding "[, which is
+introduced when $a
+susp$ is evaluated (distinct from "forced")]." at the end.
+
+T: p332, exercise 36.4: missing hats on all LHSs of translations.
+
+S?: p332: you could add a new exercise about recovering lazy control
+operators (if-then-else, when, unless) in SFPC. Of course, $when$ and
+$unless$ are probably only useful with side effects, so perhaps the
+exercise should be to recover them in MA? Possible solution is to use
+macros, e.g.
+
+    when c e => let s = susp _ is e
+                in if c then force s else ()
+
+# Ch 37
+
+T: p336, bottom: missing "s" in "the static[s] of PPCF enriches".
+
+S: p338, top: add diagrams illustrating the cost graph grammar
+components.
+
+T: p339, middle: twice you say "$\let$" when you mean "$\par$" or
+"parallel let".
+
+T: p339, middle: missing "we" in "and [we] assign unit cost to the
+substitution".
+
+S: p339, middle: you say "and [we] assign unit cost to the
+substitution, because we expect it to be implemented by a
+constant-time mechanism for updating the environment". This sounds
+nice, but assigning unit cost is also required by rules 37.2c and
+37.3d if we ant to prove Theorem 37.6. Make this connection/compulsion
+more explicit.
+
+T: p344, 3rd paragraph: replace "mapping" with "map from" in "and mu
+is a finite *mapping* the task names in Sigma".
+
+Q: p344, rules 37.10a and 37.10b: why not just have simpler rules like
+
+    e |-> e'
+    --------------------------------------------------------------
+    nu a \{ a \hookarrow e \} |->_{loc} nu a \{ a \hookarrow e' \}
+
+where "$e |-> e'$" is the dynamics for non threaded underlying
+expression language? It seems weird to fork threads here but no allow
+any parallelism (i.e. these rules don't allow evaluating a function
+and its argument at the same time).
+
+E: p345, Rule 37.10c: with your current rules 37.10a and 37.10b, the
+rule 37.10c is wrong (the substitution in the conclusion makes no
+sense). The premise for $e1$ should be "$e1 = e1'(x2) or e1 =
+x2(e1')$" and in the conclusion the "$x2.e1(x2)$" should be
+"$x2.e1$". I.e., make it a single rule that complements both 37.10a
+and 37.10b.
+
+T: p345, just below Rule 37.10c: "create *create*".
+
+
+# Ch 38
+
+
+
 
 
 # Index
@@ -414,3 +554,5 @@ S: add "derivability" ref pages 21
 S: add "mobile types" ref to pages 278, 279
 
 S: add "kinds", ref page 154
+
+S: add "call-by-name" and "call-by-value"
