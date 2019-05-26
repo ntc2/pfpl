@@ -412,8 +412,7 @@ uniformly]?".
 T: p313, bottom: missing "to" in "One way to do this is [to] give the
 procedure".
 
-T: p314, top: the definition of $tau cap$ has $nat$ in place of
-$tau$. I.e. it should be $tau cap \defeq = tau cmd x (tau \partial tau cmd)$.
+T: p314, top: the definition of $tau cap$ has $nat$ in place of $tau$. I.e. it should be $tau cap \triangleeq = tau cmd x (tau \partial tau cmd)$.
 
 S: p318, beginning of Section 35.4: you should forward reference the
 "back patch" example in Section 35.5, when giving the example code
@@ -535,9 +534,120 @@ T: p345, just below Rule 37.10c: "create *create*".
 
 # Ch 38
 
+S: p350, intro: add a reference to Section 36.4 for "suspensions".
 
+Q: p350, 4th paragraph: my reading of the chapter disagrees with this
+summary of the trade offs between futures and speculations. My reading
+is that, for the parallel dynamics, a program using futures will
+always take *at least* as many local steps as the corresponding
+program using speculations. I.e., speculations seems to be more
+efficient than futures.
 
+Q: p352, Section 38.2.2: it doesn't seem true that the "sequential
+dynamics [of] speculations are simply a reformulation of
+suspensions". For example, the following programs compute $e$ twice
+speculations but only once for suspensions. Suspensions version:
 
+    let x = susp _ : tau is e in force(x) + force(x)
+
+Versus speculations version:
+
+    let x = spec(e) in ssyn(x) + ssyn(x)
+
+S: p352, bottom: add "and speculations" in "Futures [and speculations]
+are only interesting insofar as".
+
+S: p355, bottom: instead of using a footnote (4), call out inline that
+you never defined "$let fut$".
+
+T: p356, top: replaces "Elements of this type are suspended
+computations" (plural) with "An element of this type is a suspended
+computation" (singular), to agree with the rest of the sentence being
+singular.
+
+S: p356, top: be explicit about defining $mapforce$, i.e. add
+"$mapforce(f)(s) \triangleeq = " before the definition.
+
+# Ch 39
+
+S: p361, bottom: explain that $P |--> P'$ is the top level/primary
+evaluation of programs, and that $P |->^{alpha} P'$ is only an
+auxiliary definition used to define $P |--> P'$. Perhaps it would help
+to define the initial and final states for the top level evaluation,
+but I'm not exactly sure what they should be. Perhaps
+
+    |-_{emptyset} P proc
+    --------------------
+    P initial
+
+    -------
+    1 final
+
+where "evaluating a program $P$" means
+
+    P intial
+    -----------
+    P |-->_{emptyset}^* 1
+
+I.e., evaluating a program means taking $|-->$ steps in an empty
+symbol context.
+
+S: p361, bottom: punning $|->^{epsilon}$ and $|->$ here is confusing
+and unnecessary, so remove this "notational convenience". It's
+particularly confusing because it seems you're using short and long
+arrows to mean different things, and it's much harder to distinguish
+the two arrows lengths without the subscript on the short arrow. In
+fact, it would also help to use arrows that differ in more than just
+their length, e.g. using a double arrow ($=>^{alpha}$) for the
+$|->^{alpha}$ steps, with the mnemonic that the parallel horizontial
+lines correspond to parallelism in the dynamics.
+
+S: p364, Rule 39.11a: since the chapter is already using $alpha$ as a
+meta variable standing for actions, remind the reader that here
+$=_{alpha}$ means $alpha$-equivalence, and has nothing to do with
+actions or meta variables.
+
+T: p366, Rule 39.15d: the conclusion should use a long arrow
+$|-->_{Sigma}$ (cf. Rule 39.4d).
+
+T, Q: p366, bottom: replaces "types" with "terms" in "Variables range,
+as always, over *types*". Also, why "always"? For example, variables
+range over types in System F. Perhaps the point is that the variable
+"$x$" always ranges over terms, whereas the variable "$t$" ranges over
+types.
+
+Q: p368, bottom third: re the section including "This means that
+synchronous communication can be decomposed into a simpler
+/asynchronous send/ operation", I don't understand what's
+"asynchronous" about $asnd$ vs $snd$. Based on the dynamics, it seems
+that $asnd[a](e)$ is equivalent to $snd[a](e;1)$, since both take a
+$|-->_{Sigma}$ step to $1$ when $e$ is a value. If there is synchrony,
+it must come from the dynamics. It seems that Rule 39.15d is
+synchronous, /only if/ the evaluation of processes is defined to only
+take $|->^{epsilon}$ steps (as in the presentation with initial and
+final states outlined in my suggestion on p361). Without a restriction
+like this, I don't see where synchrony comes from, or how Rule 39.19c
+can make any sense, since if a process can take $|->^{?a(e)}$ steps
+then it can consume values that were never produced!
+
+Q: p369, Rule 39.21: why not require $alpha ~ tau$ here? Cf. Rule
+39.19b.
+
+T: p369, beginning of Section 39.6: missing "a" in "when one process
+passes [a] /channel reference/".
+
+E: p370, Rule 39.23b: don't need $e val_{Sigma, alpha ~ tau}$ in the
+premise.
+
+T: p371, Rule 39.23c: the $e val$ premise is nonsense; there is no $e$
+in the conclusion.
+
+# Ch 40
+
+S: p380: explain why we need $wrap$. I.e., give an example explaining
+why $bind$ and $sync$ are not sufficiently expressive.
+
+# Ch 41
 
 # Index
 
