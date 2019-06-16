@@ -649,6 +649,89 @@ why $bind$ and $sync$ are not sufficiently expressive.
 
 # Ch 41
 
+T: p386, top: can't both be "first" in "when the *first* is a sensible
+counter-factual relative to the *first*".
+
+S: p386, top: give both an example of a "sensible counter-factual" and
+of a not "sensible counter-factual", and say more about what these
+terms mean. I think your king example is supposed to be a not
+"sensible counter-factual" example, but it's not very clear.
+
+S: p389, rules 41.6*: don't omit nu, Sigma, and p in the rules. Using
+a shorthand doesn't gain anything here, since we don't have long
+proofs involving derivation trees or anything.
+
+T: p390, theorems 41.2 and 41.3: you have $Sigma @ w$ below the arrow
+and $a$ above, but it should be $Sigma$ below and $a @ w$ above.
+
+S: p391, exercises: add an exercise about adding support for crashed
+nodes to DA. Without he possibility of crashed nodes, it doesn't seem
+very "distributed".
+
+# Ch 42
+
+S: p397, bottom: don't pun $x_i <- x_i$.
+
+# Ch 43
+
+T: p399, middle: add parens, replacing $Lambda(t)e[tau]$ with $\left( Lambda(t)e \right) [tau]$.
+
+T: p399, bottom: the sentence starting "Singletons $n$ the type
+definition problem" makes no sense. I don't know what you intended.
+
+T: p400, middle: add parens around the type lambda to get $\left( Lambda (t :: S(t))e \right) [tau]$.
+
+S: p400, middle: remind us that $T$ is the kind of types, and back
+reference Ch 18. Also, tell us that $Type$ is a synonym for $T$ (used
+e.g. in the 43.2* rules), or better yet, just pick one notation and
+stick with it (we're not gaining anything here by jumping back and
+forth between abstract and concrete syntax).
+
+S: p402, middle: even after the examples, the singletons still seem
+poorly motivated. You forward reference chs 44 and 45, but even
+better, you could give more intuitive explanation and more examples
+now.
+
+T?: p404, Rule 43.10: perhaps there should be a substitution $[c_1/u]$
+into $kappa_2$ in the conclusion?
+
+# Ch 44
+
+S: p410,411: the use of the term "module" is inconsistent, or at least
+confusing. It seems to mean "sealed modules" sometimes, and
+"structure" at other times. Clean this up / be consistent.
+
+S: p411, bottom: add "distinct" in "two bindings of the same sealed
+module result in two *distinct* abstract types".
+
+S: p413, middle: you say "together with the covariance principle for
+signatures", but I don't think you introduced this principle yet! I
+think it's Rule 44.1c, so say so and make a forward reference.
+
+S: p415, middle: you add value hypotheses $x val$ and $X val$ and then
+elide them in all rules. Instead, why not add rules that say module
+and expression variables are values, i.e.
+
+    ----------------------
+    Gamma, X:sigma |- X val
+
+    ---------------------
+    Gamma, x:tau |- x val
+
+# Ch 45
+
+S: p425, top: add "value" in "and $sigma^K_{dict}$ is the signature of
+dictionaries of some [value] type $tau$ given as follows". I.e.,
+clarify that $tau$ is the type of dictionary values, vs dictionary
+keys or dictionaries as a whole.
+
+T: p427, Rule 45.1a: the small $x$ in the conclusion should be a big
+$X$.
+
+# Ch 46
+
+
+
 # Index
 
 S: add symbols to the index, for example add $\triangleq$ to the index
