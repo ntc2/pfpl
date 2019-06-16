@@ -730,7 +730,57 @@ $X$.
 
 # Ch 46
 
+T: p435, top: remove "corresponds" in "equality of expression in a
+functional language *corresponds* follows the familiar patterns".
 
+T: P435, middle: replace "given" with "give" and "number" with
+"numbers" in "Yet the two expressions are interchangeable because they
+*given* the same result when applied to the same *number*."
+
+# Ch 47
+
+E: p448, top: you say that Corollary 47.17 implies that
+
+    A'\{fix^m ...\} \simeq A'\{fix ...\}
+
+However, Cor 47.17 does not go in the that direction (from a specific
+bounded recursion $fix^m$ to unbounded recursion). Rather, Cor 47.17
+says there exists $m'$ s.t.
+
+    A'\{fix^m' ...\} \simeq A'\{fix ...\}
+
+It seems you need a stronger version of Cor 47.17 here, that
+incorporates Cor 47.15 (with an additional argument for the diverging
+case) and says:
+
+  There exists $M >= 0$ s.t. for all $m >= M$,
+
+      [f^{(omega)}/y]e \simeq [f^{(m)}/y]e
+
+With this stronger lemma, you can argue that there exist $M$ and $M'$ s.t. forall $m >= M$ and all $m' >= M'$ we have
+
+        A\{fix ...\} \simeq A\{fix^m ...\}
+
+and
+
+        A'\{fix^m' ...\} \simeq A'\{fix ...\}
+
+and then taking $n = max{M,M'}$ we get
+
+        A\{fix ...\} \simeq A\{fix^n ...\}
+
+and
+
+        A'\{fix^n ...\} \simeq A'\{fix ...\}
+
+which is what you were trying to establish.
+
+T: p450, middle: replace $n$ with $n+1$ in "(in fact, $m = n$
+suffices)", since e.g. $m = 0$ certainly does not suffice for $f(0)$
+(it diverges).
+
+E: p451, middle: same problem as on p448, where you use Cor 47.17
+incorrectly.
 
 # Index
 
