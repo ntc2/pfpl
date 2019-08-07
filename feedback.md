@@ -782,6 +782,28 @@ suffices)", since e.g. $m = 0$ certainly does not suffice for $f(0)$
 E: p451, middle: same problem as on p448, where you use Cor 47.17
 incorrectly.
 
+# Ch 48
+
+S: p454, bottom: remind us that all terms in System F normalize, and
+so there can't be any loopy inhabitants of the identity or falsity
+types.
+
+S: p458, Def 48.5: explain the relationship (e.g. types) between the
+various ingredients to the definition of parametric logical
+equivalence, as it's very non-obvious from the definition itself. By
+reverse engineering fromthe uses of the definition, I think the types / 
+relationships are
+
+- $Delta |- tau : type$ for some $Delta$
+- $delta : Delta$ and $delta' : Delta$
+- $e$ and $e'$ are closed terms
+- $e : \hat{delta}(tau)$ and $e' : \hat{delta'}(tau)$
+
+T: p459, middle: extraneous "or" in "Similarly, when *or* $tau = forall(u.tau_1)$".
+
+T: p465, top: "when" should be "we" in "*When* then argued that the
+operations preserve"
+
 # Index
 
 S: add symbols to the index, for example add $\triangleq$ to the index
