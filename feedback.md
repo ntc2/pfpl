@@ -1,14 +1,6 @@
-# Internal Notes
-
-How far we've recorded feedback through:
-
-N: ch 30 p267
-M: ch ??
-K: whole book
-As a group: Ch 17
- 
-For mapping symbols back to latex, use
-http://detexify.kirelabs.org/classify.html
+Feedback on Bob Harper's /Practical Foundations for Programming
+Languages/ from Nathan Collins, Max Orhai, and Kevin Quick at Galois,
+Inc.
 
 # Legend
 
@@ -16,7 +8,10 @@ E = Error
 
 S = Suggestion
 
-T = Typo
+T = Typo (the line between "typo" and "error" is often blurry, and
+    we've erred on the side of calling things "typos" more often than
+    "errors". These include both spelling/grammar/copy editing errors,
+    and simple errors in inference rules and math.)
 
 Q = Question (perhaps a euphemism for "I'm worried this doesn't make
     sense")
@@ -24,13 +19,63 @@ Q = Question (perhaps a euphemism for "I'm worried this doesn't make
 # Markup
 
 We've used pseudo Latex for math; it's certainly not correct Latex, so
-hopefully the intent will clear.
+hopefully the intent will be clear.
+
+# General Feedback
+
+Context: we read and discussed the book as part of self guided study
+group at work (Galois, Inc).
+
+Introducing both concrete and abstract syntax for each language
+defined, and then switching back and forth between them (seemingly)
+without rhyme or reason in the middle of definitions, proofs, and
+discussion was often confusing. After Ch 1, when the point isn't to
+discuss the fine points of syntax and binding, it would be better to
+just stick with one syntax. In Ch 4 it's nice to see how the abstract
+syntax for binding forms like $let$ works, but once we're comfortable
+with that later chapters could probably just use concrete syntax
+exclusively. The formal discussion of syntax and binding in Ch 1 is
+very interesting (and novel for me), but seems to be mostly of
+foundational interest.
+
+We often wanted more motivation or intuition for the concepts
+introduced. For a simple example, many of the programming language
+names are not motivated (e.g. PCF, which presumably stands for
+"Partial Computable Functions"). For a broader example, none of us had
+experience with ML style module systems, and found much of /Part XVII
+Modularity/ mysterious, especially on initial reading (as in later
+chapters sometimes motivated concepts in earlier chapters, so at
+minimum some rearrangement or forward reference could help there). One
+general approach to motivation that often works is to start with
+intuitive but incorrect definitions, and then show how they're
+defective and how the correct definitions correct these defects. A
+nice example of this approach is the correctness proof for stack
+machine dynamics in Ch 28.3.
+
+The mathematical depth of book seemed "hockey stick shaped".
+Everything before the last part, /Part XVIII Equational Reasoning/,
+was pretty simple mathematically, with nearly the only theorems being
+progress and preservation. There were a few nice departures,
+e.g. proving coincidence of small and big step semantics (Ch 7.2), and
+proving correctness of stack machine dynamics (Ch 28.3). And then we
+arrive at /Part XVIII Equational Reasoning/ and things get way more
+serious. It would be nice to have variety and depth in the theorems
+throughout the book, e.g. a direct proof of normalization for STLC
+could be nice, or a proof of confluence for non-deterministic UTLC.
+
+More often than not, we couldn't find what we were looking for in the
+index. At the bottom are a few concrete suggestions for index
+additions, but a lot more than that is missing.
+
+Feedback on specific chapters follows.
 
 # Ch 4
+
 S: p37, exercise 4.1: make an analogy between analytic mode <-> type
 checking and synthetic mode <-> type inference.
 
 # Ch 5
+
 S: p44,45: explain that $\Gamma |- e \equiv e' : \tau$ parses as 
 $\Gamma |- (e \equiv e') : \tau$ to avoid confusion about precedence.
 
@@ -803,6 +848,51 @@ T: p459, middle: extraneous "or" in "Similarly, when *or* $tau = forall(u.tau_1)
 
 T: p465, top: "when" should be "we" in "*When* then argued that the
 operations preserve"
+
+# Ch 49
+
+p470, middle, in discussion of defining bisimulations by expanding
+strong equivalence:
+- T: the $Sigma$ used with $P'$ and $P''$ should be $Sigma'$,
+  i.e. should be fresh (for the same reason you're using $P'$ instead
+  of $P$).
+- T: starting here, and throughout the rest of the section, you get
+  sloppy with the symbol context subscripts $Sigma$ on the process and
+  event relations. Namely, every occurrence of $\mathcal{P}_0$ and
+  $\mathcal{E}_0$ that relate two processes or events should be
+  subscripted by a symbol context. E.g. here $P' \mathcal{P}_0 Q'$
+  should be $P' \mathcal{P}_0_{Sigma'} Q'$. One solution is to just
+  get rid of the symbol context subscripts everywhere. I don't think
+  they really add anything, but using them inconsistently is confusing.
+- S: add "forall $P'$, $Q'$, and $Sigma'$" in "this reduces to
+  show[ing] that, [forall $P'$, $Q'$, and $Sigma'$,] if $P'
+  \mathcal{P}_0_{Sigma'}$" (where I've added $_{Sigma'}$ per the
+  previous typo).
+- S: I found the abstract discussion of constructing bisimulations by
+  expanding strong equivalence confusing on two points:
+
+  1) I don't understand the sense in which we're "assuming what we're
+  trying to prove", so maybe you could say more about that;
+
+  2) Re expansions $\mathcal{P}_0$ and $\mathcal{E}_0$, you should
+  forward reference that lemmas 49.5,6,7 have concrete examples of
+  such expansions, and point out that those expansions are defined in
+  terms of strong equivalence $\approx$ (which seems to be the crux of
+  the trick). When reading the abstract discussion I couldn't imagine
+  how this might work.
+
+p471, top, proof of Lemma 49.5: the $\mathcal{E}_0$ in "and hence
+$[v/x]P' \mathcal{E}_0 [v/x]Q'$, as required" should be
+$\mathcal{E}_{Sigma}$. I.e. those terms are related by the equivalence
+$\approx$ and hence by its union with the expansion; they're not
+related by expansion itself.
+
+p471, middle, proof of Lemma 49.6: the $Q'$ in the definition of $Q''$
+should be $Q'''$, i.e. you want $Q'' = nu a ~ tau.*Q'''*$.
+
+p472, bottom: replace the second "one" with "zero" in "a silent action by one
+process may be mimicked by *one* or more silent actions by
+another". I.e., it's a ${}^*$ relation, not a ${}^+$ relation.
 
 # Index
 
